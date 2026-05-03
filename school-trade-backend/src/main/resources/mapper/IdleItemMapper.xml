@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace必须是Mapper接口的完整路径，用于绑定 -->
+<mapper namespace="com.sysu.xianya.mapper.IdleItemMapper">
+
+  <!--
+    ResultMap: 定义数据库字段名与Java实体类属性名的映射关系。
+    当字段名和属性名不一致时（如数据库是idle_name，Java是idleName），这个映射就至关重要。
+  -->
+  <resultMap id="BaseResultMap" type="com.sysu.xianya.entity.IdleItem">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="idle_name" jdbcType="VARCHAR" property="idleName" />
+    <result column="idle_details" jdbcType="VARCHAR" property="idleDetails" />
+    <result column="picture_list" jdbcType="VARCHAR" property="pictureList" />
+    <result column="idle_price" jdbcType="DECIMAL" property="idlePrice" />
+    <result column="idle_place" jdbcType="VARCHAR" property="idlePlace" />
+    <result column="idle_label" jdbcType="INTEGER" property="idleLabel" />
+    <result column="release_time" jdbcType="TIMESTAMP" property="releaseTime" />
+    <result column="idle_status" jdbcType="TINYINT" property="idleStatus" />
+    <result column="user_id" jdbcType="BIGINT" property="userId" />
+  </resultMap>
+
+  <!-- SQL片段：定义可重用的列名列表，避免在每个select中重复书写 -->
+  <sql id="Base_Column_List">
+    id, idle_name, idle_details, picture_list, idle_price, idle_place, idle_label, release_time,
+    idle_status, user_id
+  </sql>
+
+  <!-- ================================================================= -->
+  <!-- ============================= 查 (SELECT) ======================== -->
+  <!-- ================================================================= -->
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from sh_idle_item
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <select id="getAllIdleItem" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from sh_idle_item
+    where user_id = #{userId,jdbcType=BIGINT} and idle_status!=0 order by id desc
+  </select>
+
+  <select id="findIdleItem" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from sh_idle_item
+    <!-- CONCAT是MySQL的字符串拼接函数，用于实现模糊查询 -->
+    where (idle_name LIKE CONCAT('%', #{findValue}, '%') or idle_details LIKE CONCAT('%', #{findValue}, '%'))
+    and idle_status = 1 order by id desc limit #{begin}, #{nums}
+  </select>
+
+  <select id="findIdleItemByLabel" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from sh_idle_item
+    where idle_label = #{idleLabel} and idle_status = 1 order by id desc limit #{begin}, #{nums}
+  </select>
+
+  <select id="getIdleItemByStatus" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from sh_idle_item
+    where idle_status = #{status} order by id desc limit #{begin}, #{nums}
+  </select>
+
+  <select id="findIdleByList" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from sh_idle_item where id in
+    <!-- foreach标签用于遍历传入的List，并拼接成 (id1, id2, id3) 的形式 -->
+    <foreach collection="idList" index="index" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+    order by id desc
+  </select>
+
+  <!-- ================================================================= -->
+  <!-- =========================== 统计 (COUNT) ======================== -->
+  <!-- ================================================================= -->
+
+  <select id="countIdleItem" resultType="int">
+    select COUNT(*) from sh_idle_item
+    where (idle_name LIKE CONCAT('%', #{findValue}, '%') or idle_details LIKE CONCAT('%', #{findValue}, '%')) and idle_status = 1
+  </select>
+
+  <select id="countIdleItemByLabel" resultType="int">
+    select COUNT(*) from sh_idle_item
+    where idle_label = #{idleLabel} and idle_status = 1
+  </select>
+
+  <select id="countIdleItemByStatus" resultType="int">
+    select COUNT(*) from sh_idle_item
+    where idle_status = #{status}
+  </select>
+
+
+  <!-- ================================================================= -->
+  <!-- ============================= 增 (INSERT) ======================= -->
+  <!-- ================================================================= -->
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.sysu.xianya.entity.IdleItem" useGeneratedKeys="true">
+    insert into sh_idle_item (idle_name, idle_details, picture_list,
+                              idle_price, idle_place, idle_label,
+                              release_time, idle_status, user_id
+    )
+    values (#{idleName,jdbcType=VARCHAR}, #{idleDetails,jdbcType=VARCHAR}, #{pictureList,jdbcType=VARCHAR},
+            #{idlePrice,jdbcType=DECIMAL}, #{idlePlace,jdbcType=VARCHAR}, #{idleLabel,jdbcType=INTEGER},
+            #{releaseTime,jdbcType=TIMESTAMP}, #{idleStatus,jdbcType=TINYINT}, #{userId,jdbcType=BIGINT}
+           )
+  </insert>
+
+  <!-- 动态SQL：只插入对象中不为null的字段 -->
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.sysu.xianya.entity.IdleItem" useGeneratedKeys="true">
+    insert into sh_idle_item
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="idleName != null">idle_name,</if>
+      <if test="idleDetails != null">idle_details,</if>
+      <!-- ... 其他字段 ... -->
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="idleName != null">#{idleName,jdbcType=VARCHAR},</if>
+      <if test="idleDetails != null">#{idleDetails,jdbcType=VARCHAR},</if>
+      <!-- ... 其他字段 ... -->
+    </trim>
+  </insert>
+
+
+  <!-- ================================================================= -->
+  <!-- ============================= 改 (UPDATE) ======================= -->
+  <!-- ================================================================= -->
+
+  <!-- 动态SQL：只更新对象中不为null的字段 -->
+  <update id="updateByPrimaryKeySelective" parameterType="com.sysu.xianya.entity.IdleItem">
+    update sh_idle_item
+    <set>
+      <if test="idleName != null">idle_name = #{idleName,jdbcType=VARCHAR},</if>
+      <if test="idleDetails != null">idle_details = #{idleDetails,jdbcType=VARCHAR},</if>
+      <if test="pictureList != null">picture_list = #{pictureList,jdbcType=VARCHAR},</if>
+      <if test="idlePrice != null">idle_price = #{idlePrice,jdbcType=DECIMAL},</if>
+      <if test="idlePlace != null">idle_place = #{idlePlace,jdbcType=VARCHAR},</if>
+      <if test="idleLabel != null">idle_label = #{idleLabel,jdbcType=INTEGER},</if>
+      <if test="releaseTime != null">release_time = #{releaseTime,jdbcType=TIMESTAMP},</if>
+      <if test="idleStatus != null">idle_status = #{idleStatus,jdbcType=TINYINT},</if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <!-- 更新所有字段 -->
+  <update id="updateByPrimaryKey" parameterType="com.sysu.xianya.entity.IdleItem">
+    update sh_idle_item
+    set idle_name = #{idleName,jdbcType=VARCHAR},
+        idle_details = #{idleDetails,jdbcType=VARCHAR},
+      /* ... 其他字段 ... */
+        where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <!-- ================================================================= -->
+  <!-- ============================= 删 (DELETE) ======================= -->
+  <!-- ================================================================= -->
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from sh_idle_item
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+
+</mapper>

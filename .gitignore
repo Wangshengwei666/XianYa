@@ -1,0 +1,32 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Java / Maven
+target/
+*.jar
+
+# Node / Vue
+node_modules/
+dist/
+
+# Local configuration
+.env
+.env.local
+.env.*.local
+application-local.yml
+
+# Runtime uploads
+uploads/
