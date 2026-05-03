@@ -2,6 +2,10 @@
 
 XianYa (闲鸭) is a campus second-hand trading platform built with Spring Boot, Vue 2, MyBatis, MySQL, and Element UI. It includes user accounts, item publishing, image upload, favorites, messages, orders, administrator management, and optional AI-assisted item description generation through Alibaba Cloud DashScope.
 
+## Online Demo
+
+- Website: [xianya.site](http://xianya.site/#/index)
+
 ## Tech Stack
 
 - Backend: Spring Boot 2.4.0, MyBatis, Maven, Java 8+
